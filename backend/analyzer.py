@@ -7,8 +7,21 @@ This module contains 5 core forensic analysis functions for detecting image tamp
 
 import io
 import base64
-import numpy as np
-from PIL import Image, ImageChops, ImageEnhance
+from PIL import Image, ImageChops, ImageEnhance, ImageFilter, ImageOps, ImageStat
+
+
+def _percentile_from_histogram(histogram, percentile):
+    total = sum(histogram)
+    if total <= 0:
+        return 0
+
+    threshold = total * (percentile / 100.0)
+    cumulative = 0
+    for value, count in enumerate(histogram):
+        cumulative += count
+        if cumulative >= threshold:
+            return value
+    return len(histogram) - 1
 
 
 def measure_ela(image, quality=90):
@@ -27,11 +40,13 @@ def measure_ela(image, quality=90):
     compressed = Image.open(buffer).convert("RGB")
 
     diff_image = ImageChops.difference(img_rgb, compressed)
-    diff_array = np.array(diff_image).astype(np.float32)
+    diff_gray = diff_image.convert("L")
+    histogram = diff_gray.histogram()
+    stat = ImageStat.Stat(diff_gray)
 
-    raw_p95 = float(np.percentile(diff_array, 95) / 255.0 * 100)
-    raw_p99 = float(np.percentile(diff_array, 99) / 255.0 * 100)
-    raw_mean = float(np.mean(diff_array) / 255.0 * 100)
+    raw_p95 = float(_percentile_from_histogram(histogram, 95) / 255.0 * 100)
+    raw_p99 = float(_percentile_from_histogram(histogram, 99) / 255.0 * 100)
+    raw_mean = float(stat.mean[0] / 255.0 * 100)
 
     # Calibrated heuristic score used for risk scoring.
     calibrated_score = (
@@ -176,37 +191,31 @@ def analyze_noise(image):
             available: bool (True if scipy available)
         }
     """
-    try:
-        from scipy.ndimage import gaussian_filter, uniform_filter
-    except ImportError:
+    scores = []
+    block_size = 32
+
+    for channel in image.convert("RGB").split():
+        smoothed = channel.filter(ImageFilter.GaussianBlur(radius=1.5))
+        noise = ImageChops.difference(channel, smoothed)
+
+        local_scores = []
+        for top in range(0, noise.height, block_size):
+            for left in range(0, noise.width, block_size):
+                region = noise.crop((left, top, min(left + block_size, noise.width), min(top + block_size, noise.height)))
+                stat = ImageStat.Stat(region)
+                if stat.stddev:
+                    local_scores.append(stat.stddev[0])
+
+        if len(local_scores) > 1:
+            local_mean = sum(local_scores) / len(local_scores)
+            local_variance = sum((score - local_mean) ** 2 for score in local_scores) / len(local_scores)
+            scores.append(local_variance ** 0.5)
+
+    if not scores:
         return {"available": False}
 
-    # Convert to RGB numpy array
-    img_array = np.array(image.convert("RGB")).astype(float)
-
-    scores = []
-
-    # Analyze each color channel
-    for ch in range(3):
-        channel = img_array[:, :, ch]
-
-        # Extract noise by subtracting smoothed version
-        smoothed = gaussian_filter(channel, sigma=1.5)
-        noise = channel - smoothed
-
-        # Compute local noise statistics in 32x32 windows
-        local_mean = uniform_filter(noise, size=32)
-        local_sq_mean = uniform_filter(noise ** 2, size=32)
-        local_var = np.clip(local_sq_mean - local_mean ** 2, 0, None)
-
-        # Calculate consistency score
-        local_std = np.sqrt(local_var + 1e-6)
-        score = float(np.std(local_std))
-        scores.append(score)
-
-    # Average across channels and normalize
-    avg_score = float(np.mean(scores))
-    normalized = min(100.0, avg_score * 8)
+    avg_score = sum(scores) / len(scores)
+    normalized = min(100.0, avg_score * 4.6)
 
     return {
         "inconsistency_score": round(normalized, 2),
@@ -230,20 +239,17 @@ def generate_heatmap(ela_image):
     Returns:
         PIL.Image: RGBA image with color-coded heatmap
     """
-    # Convert to grayscale and normalize
-    ela_gray = np.array(ela_image.convert("L")).astype(float)
-    normalized = ela_gray / 255.0
+    ela_gray = ela_image.convert("L")
+    heatmap = ImageOps.colorize(
+        ela_gray,
+        black="#0a3bff",
+        mid="#ffc428",
+        white="#ff4030",
+    ).convert("RGBA")
 
-    h, w = ela_gray.shape
-    rgba = np.zeros((h, w, 4), dtype=np.uint8)
-
-    # Color mapping: blue → yellow → red
-    rgba[:, :, 0] = np.clip(normalized * 2 * 255, 0, 255).astype(np.uint8)  # Red
-    rgba[:, :, 1] = np.clip((1 - abs(normalized * 2 - 1)) * 255, 0, 255).astype(np.uint8)  # Green
-    rgba[:, :, 2] = np.clip((1 - normalized * 2) * 255, 0, 255).astype(np.uint8)  # Blue
-    rgba[:, :, 3] = np.clip(normalized * 230, 40, 230).astype(np.uint8)  # Alpha
-
-    return Image.fromarray(rgba, "RGBA")
+    alpha = ela_gray.point(lambda pixel: max(40, min(230, int(pixel / 255.0 * 230))))
+    heatmap.putalpha(alpha)
+    return heatmap
 
 
 def image_to_base64(image, fmt="PNG"):
