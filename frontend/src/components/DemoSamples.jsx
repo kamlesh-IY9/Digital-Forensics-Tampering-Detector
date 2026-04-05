@@ -2,22 +2,22 @@ import { useState } from 'react'
 
 const demoSamples = [
   {
-    id: 'ori',
-    label: 'Reference Sample',
-    filename: 'ori.jpeg',
-    imageUrl: '/demo/ori.jpeg',
+    id: 'authentic-evidence',
+    label: 'Authentic Sample',
+    filename: 'authentic-evidence.jpg',
+    imageUrl: '/demo/authentic-evidence.jpg',
     badgeClass: 'badge online',
-    caption: 'Use the original reference image to inspect the baseline metadata, heatmap, and probability.',
-    outcome: 'Best for understanding a lower-noise reference workflow.',
+    caption: 'A clean sample that the detector currently reads as authentic, useful for understanding the normal baseline view.',
+    outcome: 'Best for seeing an authentic verdict, low-risk signals, and a quieter heatmap.',
   },
   {
-    id: 'fake',
-    label: 'Comparison Sample',
-    filename: 'fake.jpeg',
-    imageUrl: '/demo/fake.jpeg',
+    id: 'tampered-evidence',
+    label: 'Tampered Sample',
+    filename: 'tampered-evidence.jpg',
+    imageUrl: '/demo/tampered-evidence.jpg',
     badgeClass: 'badge red',
-    caption: 'Use the second sample to compare how the forensic signals shift across the same interface.',
-    outcome: 'Best for comparing confidence, indicators, and heatmap behavior.',
+    caption: 'A manipulated sample that the detector flags as tampered, so users can compare how the forensic report changes.',
+    outcome: 'Best for seeing a tampered verdict, stronger indicators, and a more active risk profile.',
   },
 ]
 
