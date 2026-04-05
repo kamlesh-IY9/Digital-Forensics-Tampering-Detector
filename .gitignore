@@ -10,3 +10,4 @@ fake.jpeg
 *.pyc
 .env
 .DS_Store
+.vercel
