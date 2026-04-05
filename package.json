@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "M.Sc Final Year Project - Digital Forensics Tampering Detector",
   "scripts": {
-    "install:backend": "cd backend && pip install -r requirements.txt",
-    "install:frontend": "cd frontend && npm install",
+    "install:backend": "pip install -r requirements.txt",
+    "install:frontend": "npm --prefix frontend install",
     "setup": "npm run install:backend && npm run install:frontend",
     "backend": "cd backend && uvicorn main:app --reload --port 8000",
-    "frontend": "cd frontend && npm run dev",
+    "frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend install && npm --prefix frontend run build",
     "start": "concurrently --kill-others-on-fail --names \"API,UI\" --prefix-colors \"cyan,magenta\" \"npm run backend\" \"npm run frontend\""
   },
   "devDependencies": {

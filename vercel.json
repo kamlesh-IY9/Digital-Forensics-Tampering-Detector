@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/*.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{frontend/**,notebooks/**,test_images/**,README.md,PROJECT_DOCUMENTATION.md,start.sh,package-lock.json,frontend/package-lock.json,ori.jpeg}"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/health",
+      "destination": "/api/health"
+    }
+  ]
+}

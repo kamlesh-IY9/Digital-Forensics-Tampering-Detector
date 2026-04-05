@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { Upload, AlertCircle } from 'lucide-react'
+import DemoSamples from './DemoSamples'
 
 function UploadZone({ onFileSelect, isLoading }) {
   const [isDragging, setIsDragging] = useState(false)
@@ -59,9 +60,9 @@ function UploadZone({ onFileSelect, isLoading }) {
   }
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', textAlign: 'center' }}>
+    <div style={{ maxWidth: '1080px', margin: '0 auto', textAlign: 'center' }}>
       {/* Hero Section */}
-      <div style={{ marginBottom: '48px' }}>
+      <div className="hero-block" style={{ marginBottom: '48px' }}>
         <div className="badge online" style={{ marginBottom: '16px' }}>
           <div className="status-dot cyan"></div>
           System Online
@@ -91,10 +92,26 @@ function UploadZone({ onFileSelect, isLoading }) {
           Upload an image to analyze for digital tampering using advanced computer vision
           and machine learning algorithms. Detects manipulation, splicing, and forgery.
         </p>
+
+        <div className="hero-stats">
+          <div className="hero-stat-card">
+            <span className="hero-stat-value">4</span>
+            <span className="hero-stat-label">Forensic Signals</span>
+          </div>
+          <div className="hero-stat-card">
+            <span className="hero-stat-value">1-Click</span>
+            <span className="hero-stat-label">Demo Experience</span>
+          </div>
+          <div className="hero-stat-card">
+            <span className="hero-stat-value">Live</span>
+            <span className="hero-stat-label">Heatmap + Metadata</span>
+          </div>
+        </div>
       </div>
 
       {/* Upload Zone */}
       <div
+        className="upload-zone-shell"
         onClick={handleClick}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -178,6 +195,14 @@ function UploadZone({ onFileSelect, isLoading }) {
             }}>
               Supports JPEG · PNG · BMP · TIFF · WebP | Max 20 MB
             </p>
+            <p style={{
+              marginTop: '14px',
+              fontSize: '12px',
+              color: 'var(--text-secondary)',
+              letterSpacing: '0.4px'
+            }}>
+              Drag evidence into the scan field or browse locally. Prefer the guided demo below if you want to understand the workflow first.
+            </p>
           </>
         ) : (
           <>
@@ -206,6 +231,12 @@ function UploadZone({ onFileSelect, isLoading }) {
             }}>
               Running forensic algorithms
             </p>
+            <div className="analysis-steps">
+              <span>ELA</span>
+              <span>Noise</span>
+              <span>Metadata</span>
+              <span>Heatmap</span>
+            </div>
           </>
         )}
       </div>
@@ -251,6 +282,8 @@ function UploadZone({ onFileSelect, isLoading }) {
           <span className="pill">Compression Artifact Detection</span>
         </div>
       )}
+
+      {!isLoading && <DemoSamples isLoading={isLoading} onTryDemo={handleFileSelect} />}
     </div>
   )
 }

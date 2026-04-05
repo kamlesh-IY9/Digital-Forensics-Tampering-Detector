@@ -11,6 +11,49 @@ import numpy as np
 from PIL import Image, ImageChops, ImageEnhance
 
 
+def measure_ela(image, quality=90):
+    """
+    Measure raw ELA characteristics and generate an amplified display image.
+
+    The display image is intentionally brightened for visualization, while the
+    numeric score is derived from the raw JPEG-difference data so clean images
+    are not over-penalized simply because the preview is amplified.
+    """
+    img_rgb = image.convert("RGB")
+
+    buffer = io.BytesIO()
+    img_rgb.save(buffer, format="JPEG", quality=quality)
+    buffer.seek(0)
+    compressed = Image.open(buffer).convert("RGB")
+
+    diff_image = ImageChops.difference(img_rgb, compressed)
+    diff_array = np.array(diff_image).astype(np.float32)
+
+    raw_p95 = float(np.percentile(diff_array, 95) / 255.0 * 100)
+    raw_p99 = float(np.percentile(diff_array, 99) / 255.0 * 100)
+    raw_mean = float(np.mean(diff_array) / 255.0 * 100)
+
+    # Calibrated heuristic score used for risk scoring.
+    calibrated_score = (
+        max(0.0, raw_p99 - 0.7) * 20.0
+        + max(0.0, raw_p95 - 0.3) * 12.0
+        + raw_mean * 15.0
+    )
+
+    extrema = diff_image.getextrema()
+    max_diff = max([e[1] for e in extrema])
+    scale = (255.0 / max_diff) if max_diff > 0 else 1.0
+    display_image = ImageEnhance.Brightness(diff_image).enhance(min(scale, 10) * 5)
+
+    return {
+        "display_image": display_image,
+        "score": round(min(100.0, calibrated_score), 2),
+        "raw_p95": round(raw_p95, 3),
+        "raw_p99": round(raw_p99, 3),
+        "raw_mean": round(raw_mean, 3),
+    }
+
+
 def perform_ela(image, quality=90):
     """
     Perform Error Level Analysis (ELA) on an image.
@@ -29,31 +72,8 @@ def perform_ela(image, quality=90):
             - ela_image: Amplified difference image showing error levels
             - ela_score: Normalized score 0-100 (higher = more likely tampered)
     """
-    # Convert to RGB
-    img_rgb = image.convert("RGB")
-
-    # Re-save at controlled JPEG quality
-    buffer = io.BytesIO()
-    img_rgb.save(buffer, format="JPEG", quality=quality)
-    buffer.seek(0)
-    compressed = Image.open(buffer).convert("RGB")
-
-    # Compute pixel-level difference
-    ela_image = ImageChops.difference(img_rgb, compressed)
-
-    # Calculate maximum difference for normalization
-    extrema = ela_image.getextrema()
-    max_diff = max([e[1] for e in extrema])
-
-    # Amplify brightness for visibility, capped to prevent overexposure of clean images
-    scale = (255.0 / max_diff) if max_diff > 0 else 1.0
-    ela_image = ImageEnhance.Brightness(ela_image).enhance(min(scale, 10) * 5)
-
-    # Compute ELA score (95th percentile normalized to 0-100)
-    ela_array = np.array(ela_image)
-    ela_score = float(np.percentile(ela_array, 95) / 255.0 * 100)
-
-    return ela_image, round(ela_score, 2)
+    ela_data = measure_ela(image, quality=quality)
+    return ela_data["display_image"], ela_data["score"]
 
 
 def extract_metadata(image, filename=""):

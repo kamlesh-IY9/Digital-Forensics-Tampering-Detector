@@ -9,9 +9,11 @@ function App() {
   const [state, setState] = useState('idle') // idle | loading | results | error
   const [result, setResult] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const isBusy = state === 'loading'
 
   async function handleAnalyze(file) {
     setState('loading')
+    setErrorMsg('')
     try {
       const formData = new FormData()
       formData.append('file', file)
@@ -42,9 +44,10 @@ function App() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div className="app-shell" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className="app-backdrop" aria-hidden="true"></div>
       {/* Header */}
-      <header style={{
+      <header className="app-header" style={{
         position: 'sticky',
         top: 0,
         zIndex: 100,
@@ -56,7 +59,8 @@ function App() {
         justifyContent: 'space-between',
         backdropFilter: 'blur(10px)'
       }}>
-        <div 
+        <div
+          className="app-brand"
           onClick={() => window.location.reload()}
           style={{ display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer' }}
           title="Refresh Application"
@@ -83,23 +87,33 @@ function App() {
               <span style={{ color: 'var(--accent)' }}>DFT</span>
               <span style={{ color: 'var(--text-primary)' }}> Detector</span>
             </h1>
+            <p style={{
+              fontSize: '11px',
+              color: 'var(--text-muted)',
+              letterSpacing: '1px',
+              textTransform: 'uppercase',
+              marginTop: '4px'
+            }}>
+              Evidence Screening Interface
+            </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className="app-header-meta" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div className="header-status-chip" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div className="status-dot green"></div>
             <span style={{ fontSize: '12px', color: 'var(--green)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-              API LIVE
+              {isBusy ? 'ANALYZING' : 'API LIVE'}
             </span>
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right' }}>
+          <div className="header-meta-copy" style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'right' }}>
             v1.0 · M.Sc Forensics Project<br />
             Brainybeam Info-Tech
           </div>
           {state === 'results' && (
             <button
               onClick={handleNewAnalysis}
+              className="primary-action-button"
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -114,8 +128,6 @@ function App() {
                 letterSpacing: '0.5px',
                 transition: 'all 0.2s ease'
               }}
-              onMouseOver={(e) => e.currentTarget.style.background = 'var(--text-primary)'}
-              onMouseOut={(e) => e.currentTarget.style.background = 'var(--accent)'}
             >
               <RefreshCw size={16} />
               New Analysis
@@ -125,9 +137,9 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <main className="app-main" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {state === 'idle' && (
-          <div style={{ flex: 1, padding: '60px 32px' }}>
+          <div className="app-page-section" style={{ flex: 1, padding: '60px 32px' }}>
             <UploadZone onFileSelect={handleAnalyze} isLoading={false} />
             <div style={{ marginTop: '48px' }}>
               <AboutSection />
@@ -136,7 +148,7 @@ function App() {
         )}
 
         {state === 'loading' && (
-          <div style={{ flex: 1, padding: '60px 32px' }}>
+          <div className="app-page-section" style={{ flex: 1, padding: '60px 32px' }}>
             <UploadZone onFileSelect={handleAnalyze} isLoading={true} />
             <div style={{
               marginTop: '32px',
@@ -153,17 +165,17 @@ function App() {
         )}
 
         {state === 'results' && (
-          <div style={{
+          <div className="results-layout" style={{
             flex: 1,
             display: 'grid',
-            gridTemplateColumns: '1fr 400px',
+            gridTemplateColumns: '1fr 420px',
             height: 'calc(100vh - 81px)',
             overflow: 'hidden'
           }}>
-            <div style={{ overflow: 'hidden' }}>
+            <div className="results-canvas-panel" style={{ overflow: 'hidden' }}>
               <ComparisonView images={result.images} verdict={result.verdict} />
             </div>
-            <div style={{
+            <div className="results-report-panel" style={{
               overflowY: 'auto',
               background: 'var(--bg-secondary)',
               borderLeft: '1px solid var(--border)'
@@ -203,6 +215,7 @@ function App() {
               </p>
               <button
                 onClick={handleNewAnalysis}
+                className="primary-action-button"
                 style={{
                   padding: '12px 24px',
                   background: 'var(--accent)',

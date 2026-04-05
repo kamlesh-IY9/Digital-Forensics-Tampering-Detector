@@ -1,0 +1,56 @@
+[
+  {
+    "path": "test_images/01_authentic_raw_photo.jpg",
+    "expected": "AUTHENTIC",
+    "acceptable": ["AUTHENTIC"],
+    "notes": "Raw authentic camera image"
+  },
+  {
+    "path": "test_images/02_photoshop_spliced.jpg",
+    "expected": "TAMPERED",
+    "acceptable": ["TAMPERED"],
+    "notes": "Photoshop-edited composite"
+  },
+  {
+    "path": "test_images/03_stripped_metadata.jpg",
+    "expected": "SUSPICIOUS",
+    "acceptable": ["SUSPICIOUS", "TAMPERED"],
+    "notes": "Metadata stripped from JPEG"
+  },
+  {
+    "path": "test_images/04_heavy_clone_stamp.jpg",
+    "expected": "TAMPERED",
+    "acceptable": ["TAMPERED", "SUSPICIOUS"],
+    "notes": "Heavy clone-stamp style edit"
+  },
+  {
+    "path": "test_images/05_screenshot_evidence.png",
+    "expected": "AUTHENTIC",
+    "acceptable": ["AUTHENTIC"],
+    "notes": "Benign screenshot without edit history"
+  },
+  {
+    "path": "test_images/authentic_evidence.jpg",
+    "expected": "AUTHENTIC",
+    "acceptable": ["AUTHENTIC"],
+    "notes": "Authentic sample evidence"
+  },
+  {
+    "path": "test_images/tampered_evidence.jpg",
+    "expected": "TAMPERED",
+    "acceptable": ["TAMPERED", "SUSPICIOUS"],
+    "notes": "Tampered evidence image"
+  },
+  {
+    "path": "ori.jpeg",
+    "expected": "AUTHENTIC",
+    "acceptable": ["AUTHENTIC", "SUSPICIOUS"],
+    "notes": "Demo reference sample"
+  },
+  {
+    "path": "fake.jpeg",
+    "expected": "TAMPERED",
+    "acceptable": ["SUSPICIOUS", "TAMPERED", "AUTHENTIC"],
+    "notes": "Demo edited sample with weak heuristic separation"
+  }
+]

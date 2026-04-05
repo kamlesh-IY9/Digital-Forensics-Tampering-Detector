@@ -5,6 +5,11 @@ function ComparisonView({ images, verdict }) {
   const [activeView, setActiveView] = useState('original')
   const [zoom, setZoom] = useState(1)
   const [overlayOpacity, setOverlayOpacity] = useState(0.7)
+  const viewDescriptions = {
+    original: 'Reference view for the uploaded evidence image.',
+    ela: 'Amplified compression differences for spotting local edits.',
+    heatmap: 'Overlay suspicious regions on top of the original image.',
+  }
 
   const verdictColors = {
     'AUTHENTIC': 'var(--green)',
@@ -23,20 +28,24 @@ function ComparisonView({ images, verdict }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="comparison-shell" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Toolbar */}
-      <div style={{
+      <div className="comparison-toolbar" style={{
         background: 'var(--bg-secondary)',
         borderBottom: '1px solid var(--border)',
         padding: '12px 24px',
         display: 'flex',
+        flexWrap: 'wrap',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        gap: '16px'
       }}>
         {/* View Switcher */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'grid', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveView('original')}
+            className={`segmented-button ${activeView === 'original' ? 'active' : ''}`}
             style={{
               padding: '8px 16px',
               fontSize: '12px',
@@ -54,6 +63,7 @@ function ComparisonView({ images, verdict }) {
           </button>
           <button
             onClick={() => setActiveView('ela')}
+            className={`segmented-button ${activeView === 'ela' ? 'active' : ''}`}
             style={{
               padding: '8px 16px',
               fontSize: '12px',
@@ -71,6 +81,7 @@ function ComparisonView({ images, verdict }) {
           </button>
           <button
             onClick={() => setActiveView('heatmap')}
+            className={`segmented-button ${activeView === 'heatmap' ? 'active' : ''}`}
             style={{
               padding: '8px 16px',
               fontSize: '12px',
@@ -86,6 +97,14 @@ function ComparisonView({ images, verdict }) {
           >
             Heatmap Overlay
           </button>
+        </div>
+          <span style={{
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6
+          }}>
+            {viewDescriptions[activeView]}
+          </span>
         </div>
 
         {/* Controls */}
@@ -117,6 +136,7 @@ function ComparisonView({ images, verdict }) {
             <button
               onClick={handleZoomOut}
               disabled={zoom <= 0.5}
+              className="icon-control-button"
               style={{
                 width: '28px',
                 height: '28px',
@@ -143,6 +163,7 @@ function ComparisonView({ images, verdict }) {
             <button
               onClick={handleZoomIn}
               disabled={zoom >= 3.0}
+              className="icon-control-button"
               style={{
                 width: '28px',
                 height: '28px',
@@ -162,7 +183,7 @@ function ComparisonView({ images, verdict }) {
       </div>
 
       {/* Verdict Banner */}
-      <div style={{
+      <div className="verdict-banner" style={{
         background: verdictColor,
         padding: '12px 24px',
         display: 'flex',
@@ -190,7 +211,7 @@ function ComparisonView({ images, verdict }) {
       </div>
 
       {/* Image Canvas */}
-      <div style={{
+      <div className="image-canvas-shell" style={{
         flex: 1,
         background: '#020810',
         overflow: 'auto',
@@ -199,7 +220,7 @@ function ComparisonView({ images, verdict }) {
         justifyContent: 'center',
         padding: '24px'
       }}>
-        <div style={{
+        <div className="image-canvas-frame" style={{
           position: 'relative',
           display: 'inline-block',
           transform: `scale(${zoom})`,
@@ -210,6 +231,7 @@ function ComparisonView({ images, verdict }) {
           <img
             src={`data:image/jpeg;base64,${images.original}`}
             alt="Original"
+            className="analysis-image"
             style={{
               display: 'block',
               maxWidth: '100%',
@@ -224,6 +246,7 @@ function ComparisonView({ images, verdict }) {
             <img
               src={`data:image/png;base64,${images.ela}`}
               alt="ELA"
+              className="analysis-image overlay"
               style={{
                 position: 'absolute',
                 top: 0,
@@ -240,6 +263,7 @@ function ComparisonView({ images, verdict }) {
             <img
               src={`data:image/png;base64,${images.heatmap}`}
               alt="Heatmap"
+              className="analysis-image overlay"
               style={{
                 position: 'absolute',
                 top: 0,
@@ -258,7 +282,7 @@ function ComparisonView({ images, verdict }) {
 
       {/* Legend (for ELA and Heatmap views) */}
       {(activeView === 'ela' || activeView === 'heatmap') && (
-        <div style={{
+        <div className="legend-bar" style={{
           background: 'var(--bg-secondary)',
           borderTop: '1px solid var(--border)',
           padding: '12px 24px',

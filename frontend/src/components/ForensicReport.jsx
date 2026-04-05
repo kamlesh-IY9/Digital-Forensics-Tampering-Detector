@@ -1,16 +1,26 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronRight, Cpu, AlertTriangle, Database, FileText, CheckCircle, Info } from 'lucide-react'
+import {
+  ChevronDown,
+  ChevronRight,
+  Cpu,
+  AlertTriangle,
+  Database,
+  FileText,
+  CheckCircle,
+  Info,
+} from 'lucide-react'
 
 function ForensicReport({ result }) {
   const [openSections, setOpenSections] = useState({
     scores: true,
+    breakdown: true,
     indicators: true,
     metadata: false,
-    fileInfo: false
+    fileInfo: false,
   })
 
   function toggleSection(section) {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }))
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }))
   }
 
   const scoreColors = {
@@ -18,84 +28,127 @@ function ForensicReport({ result }) {
       if (value < 25) return 'var(--green)'
       if (value < 55) return 'var(--amber)'
       return 'var(--red)'
-    }
+    },
   }
 
   const verdictColors = {
-    'AUTHENTIC': 'var(--green)',
-    'SUSPICIOUS': 'var(--amber)',
-    'TAMPERED': 'var(--red)'
+    AUTHENTIC: 'var(--green)',
+    SUSPICIOUS: 'var(--amber)',
+    TAMPERED: 'var(--red)',
+  }
+
+  const confidenceColors = {
+    HIGH: 'var(--green)',
+    MEDIUM: 'var(--amber)',
+    LOW: 'var(--accent)',
   }
 
   const verdictColor = verdictColors[result.verdict] || 'var(--accent)'
+  const confidenceColor = confidenceColors[result.confidence_level] || 'var(--accent)'
+  const evidenceTypes = result.signal_summary?.evidence_types || []
 
   return (
     <div style={{ padding: '32px 24px' }}>
-      {/* Verdict Hero (Always Visible) */}
-      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-        <div style={{
-          fontSize: '11px',
-          color: 'var(--text-muted)',
-          textTransform: 'uppercase',
-          letterSpacing: '2px',
-          marginBottom: '12px',
-          fontWeight: 700
-        }}>
+      <div className="report-hero-card" style={{ marginBottom: '24px', textAlign: 'center' }}>
+        <div
+          style={{
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            marginBottom: '12px',
+            fontWeight: 700,
+          }}
+        >
           FORENSIC VERDICT
         </div>
 
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '36px',
-          fontWeight: 800,
-          letterSpacing: '4px',
-          color: verdictColor,
-          textShadow: `0 0 20px ${verdictColor}40`,
-          marginBottom: '12px'
-        }}>
+        <h1
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '36px',
+            fontWeight: 800,
+            letterSpacing: '4px',
+            color: verdictColor,
+            textShadow: `0 0 20px ${verdictColor}40`,
+            marginBottom: '12px',
+          }}
+        >
           {result.verdict}
         </h1>
 
-        <p style={{
-          fontSize: '13px',
-          color: 'var(--text-secondary)',
-          marginBottom: '24px',
-          lineHeight: 1.6
-        }}>
+        <p
+          style={{
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            marginBottom: '20px',
+            lineHeight: 1.7,
+          }}
+        >
           {result.verdict_desc}
         </p>
 
-        <div style={{
-          display: 'inline-flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '16px 32px',
-          background: 'var(--bg-card)',
-          border: `2px solid ${verdictColor}`,
-          borderRadius: '8px'
-        }}>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '32px',
-            fontWeight: 800,
-            color: scoreColors.getColor(result.tampering_probability)
-          }}>
-            {result.tampering_probability.toFixed(1)}%
-          </span>
-          <span style={{
-            fontSize: '10px',
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase',
-            letterSpacing: '1px',
-            fontWeight: 700
-          }}>
-            TAMPERING PROBABILITY
-          </span>
+        <div className="assessment-grid">
+          <MetricCard
+            label="Tampering Probability"
+            value={`${result.tampering_probability.toFixed(1)}%`}
+            accent={scoreColors.getColor(result.tampering_probability)}
+          />
+          <MetricCard
+            label="Confidence"
+            value={`${result.confidence_level} · ${result.confidence_score.toFixed(1)}%`}
+            accent={confidenceColor}
+          />
+          <MetricCard
+            label="Processing Time"
+            value={`${result.processing_time_s}s`}
+            accent="var(--accent)"
+          />
+        </div>
+
+        <div
+          style={{
+            marginTop: '18px',
+            padding: '14px 16px',
+            borderRadius: '12px',
+            border: '1px solid var(--border)',
+            background: 'rgba(255,255,255,0.02)',
+            textAlign: 'left',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '10px',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '1.3px',
+              marginBottom: '6px',
+              fontWeight: 700,
+            }}
+          >
+            Assessment Summary
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.75 }}>
+            {result.analysis_summary}
+          </p>
+        </div>
+
+        <div className="signal-pill-row">
+          {evidenceTypes.length === 0 ? (
+            <span className="signal-pill">No major evidence signals</span>
+          ) : (
+            evidenceTypes.map((signal) => (
+              <span key={signal} className="signal-pill">
+                {signal.replace(/_/g, ' ')}
+              </span>
+            ))
+          )}
+          {result.signal_summary?.corroborated && (
+            <span className="signal-pill corroborated">Corroborated signals</span>
+          )}
         </div>
       </div>
 
-      {/* Section 1: Analysis Scores */}
       <AccordionSection
         title="Analysis Scores"
         icon={<Cpu size={18} />}
@@ -123,7 +176,23 @@ function ForensicReport({ result }) {
         </div>
       </AccordionSection>
 
-      {/* Section 2: Forensic Indicators */}
+      <AccordionSection
+        title={`Score Breakdown (${result.score_breakdown.length})`}
+        icon={<Info size={18} />}
+        isOpen={openSections.breakdown}
+        onToggle={() => toggleSection('breakdown')}
+      >
+        {result.score_breakdown.length === 0 ? (
+          <EmptyState message="No major risk factors contributed to this assessment." />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {result.score_breakdown.map((item) => (
+              <BreakdownRow key={item.label} item={item} />
+            ))}
+          </div>
+        )}
+      </AccordionSection>
+
       <AccordionSection
         title={`Forensic Indicators (${result.indicators.length})`}
         icon={<AlertTriangle size={18} />}
@@ -131,20 +200,11 @@ function ForensicReport({ result }) {
         onToggle={() => toggleSection('indicators')}
       >
         {result.indicators.length === 0 ? (
-          <div style={{
-            padding: '16px',
-            background: 'rgba(0,230,118,0.08)',
-            border: '1px solid var(--green-dim)',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <CheckCircle size={20} color="var(--green)" />
-            <span style={{ fontSize: '13px', color: 'var(--green)' }}>
-              No suspicious indicators detected
-            </span>
-          </div>
+          <EmptyState
+            icon={<CheckCircle size={20} color="var(--green)" />}
+            message="No suspicious indicators detected"
+            tone="success"
+          />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {result.indicators.map((indicator, idx) => (
@@ -154,7 +214,6 @@ function ForensicReport({ result }) {
         )}
       </AccordionSection>
 
-      {/* Section 3: Image Metadata */}
       <AccordionSection
         title="Image Metadata"
         icon={<Database size={18} />}
@@ -162,11 +221,7 @@ function ForensicReport({ result }) {
         onToggle={() => toggleSection('metadata')}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '12px'
-          }}>
+          <div className="metadata-grid">
             <StatBox label="Format" value={result.metadata.format} />
             <StatBox label="Dimensions" value={result.metadata.size_display} />
             <StatBox label="Color Mode" value={result.metadata.mode} />
@@ -174,12 +229,7 @@ function ForensicReport({ result }) {
           </div>
 
           {result.metadata.editing_software.length > 0 && (
-            <div style={{
-              padding: '12px 16px',
-              background: 'rgba(255,59,59,0.08)',
-              border: '1px solid var(--red-dim)',
-              borderRadius: '8px'
-            }}>
+            <div className="meta-alert-card">
               <strong style={{ fontSize: '12px', color: 'var(--red)', display: 'block', marginBottom: '6px' }}>
                 EDITING SOFTWARE DETECTED
               </strong>
@@ -190,31 +240,28 @@ function ForensicReport({ result }) {
           )}
 
           {result.metadata.exif_count > 0 && (
-            <div style={{
-              maxHeight: '200px',
-              overflowY: 'auto',
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              fontSize: '11px'
-            }}>
+            <div className="metadata-table-shell">
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <tbody>
                   {Object.entries(result.metadata.exif).slice(0, 30).map(([key, value]) => (
                     <tr key={key} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{
-                        padding: '8px 12px',
-                        color: 'var(--text-muted)',
-                        fontWeight: 700,
-                        width: '40%'
-                      }}>
+                      <td
+                        style={{
+                          padding: '8px 12px',
+                          color: 'var(--text-muted)',
+                          fontWeight: 700,
+                          width: '40%',
+                        }}
+                      >
                         {key}
                       </td>
-                      <td style={{
-                        padding: '8px 12px',
-                        color: 'var(--text-secondary)',
-                        wordBreak: 'break-word'
-                      }}>
+                      <td
+                        style={{
+                          padding: '8px 12px',
+                          color: 'var(--text-secondary)',
+                          wordBreak: 'break-word',
+                        }}
+                      >
                         {String(value).substring(0, 100)}
                       </td>
                     </tr>
@@ -226,7 +273,6 @@ function ForensicReport({ result }) {
         </div>
       </AccordionSection>
 
-      {/* Section 4: File Information */}
       <AccordionSection
         title="File Information"
         icon={<FileText size={18} />}
@@ -244,43 +290,22 @@ function ForensicReport({ result }) {
   )
 }
 
-// Sub-components
-
 function AccordionSection({ title, icon, isOpen, onToggle, children }) {
   return (
-    <div style={{
-      marginBottom: '16px',
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: '8px',
-      overflow: 'hidden'
-    }}>
-      <button
-        onClick={onToggle}
-        style={{
-          width: '100%',
-          padding: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'background 0.2s ease'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.background = 'var(--bg-card-hover)'}
-        onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-      >
+    <div className="report-section-card" style={{ marginBottom: '16px' }}>
+      <button className="accordion-trigger" onClick={onToggle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ color: 'var(--accent)' }}>{icon}</div>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '14px',
-            fontWeight: 700,
-            color: 'var(--text-primary)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px'
-          }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}
+          >
             {title}
           </span>
         </div>
@@ -290,11 +315,16 @@ function AccordionSection({ title, icon, isOpen, onToggle, children }) {
           <ChevronRight size={18} color="var(--text-muted)" />
         )}
       </button>
-      {isOpen && (
-        <div style={{ padding: '0 16px 16px 16px' }}>
-          {children}
-        </div>
-      )}
+      {isOpen && <div style={{ padding: '0 16px 16px 16px' }}>{children}</div>}
+    </div>
+  )
+}
+
+function MetricCard({ label, value, accent }) {
+  return (
+    <div className="metric-card">
+      <span className="metric-card-label">{label}</span>
+      <strong style={{ color: accent, fontSize: '22px', letterSpacing: '0.5px' }}>{value}</strong>
     </div>
   )
 }
@@ -302,28 +332,40 @@ function AccordionSection({ title, icon, isOpen, onToggle, children }) {
 function ScoreMeter({ label, value, color }) {
   return (
     <div>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '8px'
-      }}>
-        <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '8px',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '12px',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
           {label}
         </span>
-        <strong style={{ fontSize: '14px', color: color, fontWeight: 700 }}>
-          {value.toFixed(1)}%
-        </strong>
+        <strong style={{ fontSize: '14px', color: color, fontWeight: 700 }}>{value.toFixed(1)}%</strong>
       </div>
       <div className="progress-bar">
-        <div
-          className="progress-fill"
-          style={{
-            width: `${Math.min(100, value)}%`,
-            background: color
-          }}
-        ></div>
+        <div className="progress-fill" style={{ width: `${Math.min(100, value)}%`, background: color }}></div>
       </div>
+    </div>
+  )
+}
+
+function BreakdownRow({ item }) {
+  return (
+    <div className="breakdown-row">
+      <div>
+        <div className="breakdown-label">{item.label}</div>
+      </div>
+      <strong className="breakdown-points">+{item.points.toFixed(1)}</strong>
     </div>
   )
 }
@@ -332,117 +374,108 @@ function IndicatorCard({ indicator }) {
   const severityStyles = {
     high: { bg: 'rgba(255,59,59,0.08)', border: 'var(--red-dim)', color: 'var(--red)', icon: AlertTriangle },
     medium: { bg: 'rgba(255,176,32,0.08)', border: 'var(--amber-dim)', color: 'var(--amber)', icon: AlertTriangle },
-    low: { bg: 'rgba(0,200,255,0.08)', border: 'var(--accent-dim)', color: 'var(--accent)', icon: Info }
+    low: { bg: 'rgba(0,200,255,0.08)', border: 'var(--accent-dim)', color: 'var(--accent)', icon: Info },
   }
 
   const style = severityStyles[indicator.severity] || severityStyles.low
   const Icon = style.icon
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      background: style.bg,
-      border: `1px solid ${style.border}`,
-      borderRadius: '8px'
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        marginBottom: '8px'
-      }}>
+    <div
+      style={{
+        padding: '12px 16px',
+        background: style.bg,
+        border: `1px solid ${style.border}`,
+        borderRadius: '10px',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginBottom: '8px',
+        }}
+      >
         <Icon size={16} color={style.color} />
-        <span style={{
-          fontSize: '11px',
-          color: 'var(--text-muted)',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          fontWeight: 700,
-          flex: 1
-        }}>
+        <span
+          style={{
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            fontWeight: 700,
+            flex: 1,
+          }}
+        >
           {indicator.type.replace(/_/g, ' ')}
         </span>
-        <span style={{
-          fontSize: '9px',
-          padding: '3px 8px',
-          background: style.color,
-          color: 'var(--bg-primary)',
-          borderRadius: '4px',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px'
-        }}>
+        <span
+          style={{
+            fontSize: '9px',
+            padding: '3px 8px',
+            background: style.color,
+            color: 'var(--bg-primary)',
+            borderRadius: '999px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
           {indicator.severity}
         </span>
       </div>
-      <p style={{
-        fontSize: '12px',
-        color: 'var(--text-secondary)',
-        lineHeight: 1.5
-      }}>
+      <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         {indicator.message}
       </p>
     </div>
   )
 }
 
+function EmptyState({ icon, message, tone = 'neutral' }) {
+  const toneStyles = tone === 'success'
+    ? {
+        background: 'rgba(0,230,118,0.08)',
+        border: '1px solid var(--green-dim)',
+        color: 'var(--green)',
+      }
+    : {
+        background: 'rgba(0,200,255,0.08)',
+        border: '1px solid var(--accent-dim)',
+        color: 'var(--accent)',
+      }
+
+  return (
+    <div
+      style={{
+        padding: '16px',
+        borderRadius: '10px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        ...toneStyles,
+      }}
+    >
+      {icon || <Info size={20} color="currentColor" />}
+      <span style={{ fontSize: '13px', color: toneStyles.color }}>{message}</span>
+    </div>
+  )
+}
+
 function StatBox({ label, value }) {
   return (
-    <div style={{
-      padding: '12px',
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: '6px'
-    }}>
-      <div style={{
-        fontSize: '10px',
-        color: 'var(--text-muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
-        marginBottom: '4px'
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontSize: '13px',
-        color: 'var(--text-primary)',
-        fontWeight: 700
-      }}>
-        {value}
-      </div>
+    <div className="report-info-card">
+      <div className="report-info-label">{label}</div>
+      <div className="report-info-value">{value}</div>
     </div>
   )
 }
 
 function InfoRow({ label, value }) {
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '12px',
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border)',
-      borderRadius: '6px'
-    }}>
-      <span style={{
-        fontSize: '12px',
-        color: 'var(--text-muted)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px'
-      }}>
-        {label}
-      </span>
-      <span style={{
-        fontSize: '12px',
-        color: 'var(--text-primary)',
-        fontWeight: 700,
-        textAlign: 'right',
-        wordBreak: 'break-all',
-        maxWidth: '60%'
-      }}>
-        {value}
-      </span>
+    <div className="report-info-row">
+      <span className="report-info-label">{label}</span>
+      <span className="report-row-value">{value}</span>
     </div>
   )
 }
