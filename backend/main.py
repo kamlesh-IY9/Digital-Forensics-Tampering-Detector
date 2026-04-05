@@ -16,6 +16,7 @@ except ImportError:
     from service import analyze_upload, health_payload
 
 FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+FRONTEND_PUBLIC = Path(__file__).resolve().parent.parent / "frontend" / "public"
 
 def create_app():
     app = FastAPI(
@@ -48,8 +49,23 @@ def create_app():
 
     if FRONTEND_DIST.exists():
         assets_dir = FRONTEND_DIST / "assets"
+        demo_dir = FRONTEND_DIST / "demo"
+        public_demo_dir = FRONTEND_PUBLIC / "demo"
+        favicon_file = FRONTEND_DIST / "favicon.svg"
+
         if assets_dir.exists():
             app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        if demo_dir.exists():
+            app.mount("/demo", StaticFiles(directory=demo_dir), name="demo")
+        elif public_demo_dir.exists():
+            app.mount("/demo", StaticFiles(directory=public_demo_dir), name="demo-public")
+
+        @app.get("/favicon.svg", include_in_schema=False)
+        async def serve_favicon():
+            target = favicon_file if favicon_file.exists() else FRONTEND_PUBLIC / "favicon.svg"
+            if not target.exists():
+                raise HTTPException(status_code=404, detail="Not Found")
+            return FileResponse(target)
 
         @app.get("/", include_in_schema=False)
         async def serve_frontend_root():
@@ -63,6 +79,10 @@ def create_app():
             requested = FRONTEND_DIST / full_path
             if requested.is_file():
                 return FileResponse(requested)
+
+            public_requested = FRONTEND_PUBLIC / full_path
+            if public_requested.is_file():
+                return FileResponse(public_requested)
 
             return FileResponse(FRONTEND_DIST / "index.html")
 
