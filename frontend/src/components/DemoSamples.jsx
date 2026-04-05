@@ -1,11 +1,13 @@
 import { useState } from 'react'
+import authenticDemoImage from '../assets/demo/authentic-evidence.jpg'
+import tamperedDemoImage from '../assets/demo/tampered-evidence.jpg'
 
 const demoSamples = [
   {
     id: 'authentic-evidence',
     label: 'Authentic Sample',
     filename: 'authentic-evidence.jpg',
-    imageUrl: '/demo/authentic-evidence.jpg',
+    imageUrl: authenticDemoImage,
     badgeClass: 'badge online',
     caption: 'A clean sample that the detector currently reads as authentic, useful for understanding the normal baseline view.',
     outcome: 'Best for seeing an authentic verdict, low-risk signals, and a quieter heatmap.',
@@ -14,7 +16,7 @@ const demoSamples = [
     id: 'tampered-evidence',
     label: 'Tampered Sample',
     filename: 'tampered-evidence.jpg',
-    imageUrl: '/demo/tampered-evidence.jpg',
+    imageUrl: tamperedDemoImage,
     badgeClass: 'badge red',
     caption: 'A manipulated sample that the detector flags as tampered, so users can compare how the forensic report changes.',
     outcome: 'Best for seeing a tampered verdict, stronger indicators, and a more active risk profile.',
