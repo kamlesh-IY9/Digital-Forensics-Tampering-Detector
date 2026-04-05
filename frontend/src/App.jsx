@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Shield, RefreshCw, AlertTriangle } from 'lucide-react'
 import UploadZone from './components/UploadZone'
 import ComparisonView from './components/ComparisonView'
@@ -10,6 +10,11 @@ function App() {
   const [result, setResult] = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
   const isBusy = state === 'loading'
+  const resultViewKey = result ? `${result.file_info?.filename || 'result'}-${result.processing_time_s}` : 'empty'
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+  }, [state])
 
   async function handleAnalyze(file) {
     setState('loading')
@@ -165,7 +170,7 @@ function App() {
         )}
 
         {state === 'results' && (
-          <div className="results-layout" style={{ flex: 1 }}>
+          <div className="results-layout" style={{ flex: 1 }} key={resultViewKey}>
             <div className="results-canvas-panel" style={{ overflow: 'hidden' }}>
               <ComparisonView images={result.images} verdict={result.verdict} />
             </div>

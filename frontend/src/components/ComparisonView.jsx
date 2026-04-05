@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ZoomIn, ZoomOut, Layers } from 'lucide-react'
 
 function ComparisonView({ images, verdict }) {
   const [activeView, setActiveView] = useState('original')
   const [zoom, setZoom] = useState(1)
   const [overlayOpacity, setOverlayOpacity] = useState(0.7)
+  const canvasRef = useRef(null)
 
   const viewDescriptions = {
     original: 'Reference view for the uploaded evidence image.',
@@ -27,6 +28,24 @@ function ComparisonView({ images, verdict }) {
   function handleZoomOut() {
     setZoom(prev => Math.max(0.5, prev - 0.25))
   }
+
+  useEffect(() => {
+    setActiveView('original')
+    setZoom(1)
+    setOverlayOpacity(0.7)
+
+    if (canvasRef.current) {
+      canvasRef.current.scrollTop = 0
+      canvasRef.current.scrollLeft = 0
+    }
+  }, [images])
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      canvasRef.current.scrollTop = 0
+      canvasRef.current.scrollLeft = 0
+    }
+  }, [activeView])
 
   return (
     <div className="comparison-shell" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -205,18 +224,19 @@ function ComparisonView({ images, verdict }) {
         </strong>
       </div>
 
-      <div className="image-canvas-shell" style={{
+      <div className="image-canvas-shell" ref={canvasRef} style={{
         flex: 1,
         background: '#020810',
         overflow: 'auto',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
-        padding: '32px'
+        padding: '24px 24px 40px'
       }}>
         <div className="image-canvas-frame" style={{
           position: 'relative',
           display: 'inline-block',
+          maxWidth: 'min(100%, 760px)',
           transform: `scale(${zoom})`,
           transformOrigin: 'top center',
           transition: 'transform 0.24s ease, box-shadow 0.24s ease'
@@ -228,6 +248,8 @@ function ComparisonView({ images, verdict }) {
             style={{
               display: 'block',
               maxWidth: '100%',
+              maxHeight: 'min(52vh, 540px)',
+              width: 'auto',
               height: 'auto',
               opacity: activeView === 'ela' ? 0 : 1,
               transition: 'opacity 0.3s ease'
@@ -245,6 +267,7 @@ function ComparisonView({ images, verdict }) {
                 left: 0,
                 width: '100%',
                 height: '100%',
+                maxHeight: 'min(52vh, 540px)',
                 objectFit: 'contain'
               }}
             />
@@ -261,6 +284,7 @@ function ComparisonView({ images, verdict }) {
                 left: 0,
                 width: '100%',
                 height: '100%',
+                maxHeight: 'min(52vh, 540px)',
                 objectFit: 'contain',
                 opacity: overlayOpacity,
                 mixBlendMode: 'screen',
