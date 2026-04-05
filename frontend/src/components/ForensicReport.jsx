@@ -48,45 +48,30 @@ function ForensicReport({ result }) {
   const evidenceTypes = result.signal_summary?.evidence_types || []
 
   return (
-    <div style={{ padding: '32px 24px' }}>
+    <div className="report-shell">
       <div className="report-hero-card" style={{ marginBottom: '24px', textAlign: 'center' }}>
-        <div
-          style={{
-            fontSize: '11px',
-            color: 'var(--text-muted)',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            marginBottom: '12px',
-            fontWeight: 700,
-          }}
-        >
+        <div className="report-kicker">
           FORENSIC VERDICT
         </div>
 
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: '36px',
-            fontWeight: 800,
-            letterSpacing: '4px',
-            color: verdictColor,
-            textShadow: `0 0 20px ${verdictColor}40`,
-            marginBottom: '12px',
-          }}
-        >
+        <h1 className="report-verdict-heading" style={{ color: verdictColor, textShadow: `0 0 20px ${verdictColor}40` }}>
           {result.verdict}
         </h1>
 
-        <p
-          style={{
-            fontSize: '13px',
-            color: 'var(--text-secondary)',
-            marginBottom: '20px',
-            lineHeight: 1.7,
-          }}
-        >
+        <p className="report-description">
           {result.verdict_desc}
         </p>
+
+        <div className="report-meta-strip">
+          <div className="report-meta-pill">
+            <span className="report-meta-label">Classification</span>
+            <strong style={{ color: verdictColor }}>{result.verdict}</strong>
+          </div>
+          <div className="report-meta-pill">
+            <span className="report-meta-label">Confidence</span>
+            <strong style={{ color: confidenceColor }}>{result.confidence_level}</strong>
+          </div>
+        </div>
 
         <div className="assessment-grid">
           <MetricCard

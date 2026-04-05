@@ -165,21 +165,11 @@ function App() {
         )}
 
         {state === 'results' && (
-          <div className="results-layout" style={{
-            flex: 1,
-            display: 'grid',
-            gridTemplateColumns: '1fr 420px',
-            height: 'calc(100vh - 81px)',
-            overflow: 'hidden'
-          }}>
+          <div className="results-layout" style={{ flex: 1 }}>
             <div className="results-canvas-panel" style={{ overflow: 'hidden' }}>
               <ComparisonView images={result.images} verdict={result.verdict} />
             </div>
-            <div className="results-report-panel" style={{
-              overflowY: 'auto',
-              background: 'var(--bg-secondary)',
-              borderLeft: '1px solid var(--border)'
-            }}>
+            <div className="results-report-panel">
               <ForensicReport result={result} />
             </div>
           </div>
